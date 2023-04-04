@@ -2,14 +2,19 @@
 
 import octoprint.plugin
 import re
+import time
+from datetime import datetime  
 
 class PrinterAlerts(octoprint.plugin.AssetPlugin,
 				octoprint.plugin.TemplatePlugin,
                 octoprint.plugin.SettingsPlugin):
 				
 	def AlertWaitingForUser(self, comm, line, *args, **kwargs):
-		if "echo:busy: paused for user" in line:
-			self._plugin_manager.send_plugin_message(self._identifier, dict(type="popup", msg="Printer Paused for User"))
+		m = re.match("(.*): (.*) driver overtemperature warning! [(](.*)mA[)]", line)
+		if m is not None:
+			date_time = datetime.fromtimestamp(time.time())
+			str_time = date_time.strftime("%H:%M:%S")
+			self._plugin_manager.send_plugin_message(self._identifier, dict(type="popup", msg=f"{str_time}: {line}"))
 		return line
 	
 	##-- AssetPlugin hooks
